@@ -105,7 +105,8 @@ void settleDoneCb(osjob_t *pSendJob);
 void warmupDoneCb(osjob_t *pSendJob);
 void txFailedDoneCb(osjob_t *pSendJob);
 void sleepDoneCb(osjob_t *pSendJob);
-Arduino_LoRaWAN::SendBufferCbFn sendBufferDoneCb;
+static Arduino_LoRaWAN::SendBufferCbFn sendBufferDoneCb;
+static Arduino_LoRaWAN::ReceivePortBufferCbFn receiveMessage;
 
 /****************************************************************************\
 |
@@ -384,6 +385,9 @@ void setup_platform(void)
 #ifdef CATENA_CFG_SYSCLK
         gCatena.SafePrintf("SYSCLK: %d MHz\n", CATENA_CFG_SYSCLK);
 #endif
+
+        gLoRaWAN.SetReceiveBufferBufferCb(receiveMessage);
+        setTxCycleTime(CATCFG_T_CYCLE_INITIAL, CATCFG_INTERVAL_COUNT_INITIAL);
 
         gLed.begin();
         gCatena.registerObject(&gLed);
@@ -928,4 +932,72 @@ void warmupDoneCb(
         )
         {
         startSendingUplink();
+        }
+
+static void receiveMessage(
+        void *pContext,
+        uint8_t port,
+        const uint8_t *pMessage,
+        size_t nMessage
+        )
+        {
+        unsigned txCycle;
+        unsigned txCount;
+
+        if (port == 0)
+                {
+                gCatena.SafePrintf("MAC message:");
+                for (unsigned i = 0; i < LMIC.dataBeg; ++i)
+                        {
+                        gCatena.SafePrintf(" %02x", LMIC.frame[i]);
+                        }
+                gCatena.SafePrintf("\n");
+                return;
+                }
+
+        else if (! (port == 1 && 2 <= nMessage && nMessage <= 3))
+                {
+                gCatena.SafePrintf("invalid message port(%02x)/length(%x)\n",
+                        port, nMessage
+                        );
+                return;
+                }
+
+        txCycle = (pMessage[0] << 8) | pMessage[1];
+
+        if (txCycle < CATCFG_T_MIN || txCycle > CATCFG_T_MAX)
+                {
+                gCatena.SafePrintf("tx cycle time out of range: %u\n", txCycle);
+                return;
+                }
+
+        // byte [2], if present, is the repeat count.
+        // explicitly sending zero causes it to stick.
+        txCount = CATCFG_INTERVAL_COUNT;
+        if (nMessage >= 3)
+                {
+                txCount = pMessage[2];
+                }
+
+        setTxCycleTime(txCycle, txCount);
+        }
+
+void setTxCycleTime(
+        unsigned txCycle,
+        unsigned txCount
+        )
+        {
+        if (txCount > 0)
+                gCatena.SafePrintf(
+                        "message cycle time %u seconds for %u messages\n",
+                        txCycle, txCount
+                        );
+        else
+                gCatena.SafePrintf(
+                        "message cycle time %u seconds indefinitely\n",
+                        txCycle
+                        );
+
+        gTxCycle = txCycle;
+        gTxCycleCount = txCount;
         }
