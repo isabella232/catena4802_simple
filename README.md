@@ -69,7 +69,7 @@ $ cd catena4802_simple
 
 $ # confirm that you're in the right place.
 $ ls
-catena4802_simple.ino  git-repos.dat  README.md
+catena4802_simple.ino  extra/ git-boot.sh* git-repos.dat LICENCE README.md
 ```
 
 ### Install the MCCI STM32 board support library
@@ -119,7 +119,7 @@ Resolving deltas: 100% (900/900), done.
 No repos with errors
 No repos skipped.
 *** no repos were pulled ***
-Repos downloaded:      Catena-Arduino-Platform arduino-lorawan Catena-mcciadk arduino-lmic MCCI_FRAM_I2C MCCI-Catena-HS300x
+Repos downloaded:      Catena-Arduino-Platform arduino-lorawan Catena-mcciadk arduino-lmic MCCI_FRAM_I2C MCCI-Catena-SHT3x Modbus-for-Arduino
 ```
 
 It has a number of advanced options; use `./git-boot.sh -h` to get help, or look at the source code [here](./git-boot.sh).
@@ -173,7 +173,7 @@ Load the sketch into the Catena using `Sketch`>`Upload` and move on to provision
 
 ## Provision your Catena 4802
 
-In order to provision the Catena, refer the following document: [How-To-Provision-Your-Catena-Device](https://github.com/mcci-catena/Catena-Sketches/blob/master/extra/How-To-Provision-Your-Catena-Device.md).
+In order to provision the Catena, refer the following document: [How-To-Provision-Your-Catena-Device](https://github.com/mcci-catena/catena4802_simple/blob/master/extra/How-To-Provision-Your-Catena-Device.md).
 
 ## Notes 
 
